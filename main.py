@@ -93,19 +93,31 @@ def get_account_dictionary_file_path(log_list, choice):
     return os.path.join(logs_path, log_list[choice])
 
 
-async def run(dictionary_file):
-    connector = TCPConnector(limit=100, limit_per_host=40)
+async def run(dictionary_file, started_at):
+    connector = TCPConnector(limit=10, limit_per_host=1)
+    wallets_and_endpoints = get_wallets_and_endpoints(dictionary_file)
+    loop_counter = 0
+    success_counter = {'count': 0}
     async with ClientSession(connector=connector) as session:
         while True:
-            wallets_and_endpoints = get_wallets_and_endpoints(dictionary_file)
-
             tasks = []
+            print(f"\nStarting loop {loop_counter + 1}")
             for wallet_address, rpc_endpoint in wallets_and_endpoints.items():
-                tasks.append(check_wallet_balance(session, wallet_address, rpc_endpoint))
-                tasks.append(check_gas_price(session, rpc_endpoint))
-                tasks.append(check_block_number(session, rpc_endpoint))
-
+                tasks.append(check_wallet_balance(session, wallet_address, rpc_endpoint, success_counter))
+                tasks.append(check_gas_price(session, rpc_endpoint, success_counter))
+                tasks.append(check_block_number(session, rpc_endpoint, success_counter))
             await asyncio.gather(*tasks)
+            loop_counter += 1
+            print(f"Finished loop {loop_counter}\n")
+            print("Totals:")
+            running_for = datetime.now() - started_at
+            print(f"{success_counter['count']} successful requests")
+            running_time = round(running_for.total_seconds(), 1)
+            print(f"{running_time} seconds of running")
+            avg_requests_per_sec = round(success_counter['count'] / running_for.total_seconds(), 1)
+            print(f"{avg_requests_per_sec} average requests per second")
+            avg_requests_per_wallet = round(success_counter['count'] / len(wallets_and_endpoints), 1)
+            print(f"{avg_requests_per_wallet} average requests per wallet")
 
 
 def get_wallets_and_endpoints(selected_account_dictionary):
@@ -116,7 +128,7 @@ def get_wallets_and_endpoints(selected_account_dictionary):
     return wallets_and_endpoints
 
 
-async def check_wallet_balance(session, wallet_address, rpc_endpoint):
+async def check_wallet_balance(session, wallet_address, rpc_endpoint, success_counter):
     payload = {
         "jsonrpc": "2.0",
         "method": "eth_getBalance",
@@ -128,11 +140,12 @@ async def check_wallet_balance(session, wallet_address, rpc_endpoint):
         try:
             balance = int(str(result['result']), 16) / 1e18
             print(f"Wallet balance: {balance} ETH, rpc endpoint: {rpc_endpoint}")
+            success_counter['count'] += 1
         except ValueError as e:
             print(f"Error converting balance: {e}")
 
 
-async def check_gas_price(session, rpc_endpoint):
+async def check_gas_price(session, rpc_endpoint, success_counter):
     payload = {
         "jsonrpc": "2.0",
         "method": "eth_gasPrice",
@@ -146,13 +159,14 @@ async def check_gas_price(session, rpc_endpoint):
             if isinstance(balance_hex, str):
                 gas_price = int(balance_hex, 16) / 1e18
                 print(f"Gas price: {gas_price} Gwei, rpc endpoint: {rpc_endpoint}")
+                success_counter['count'] += 1
             else:
                 print(f"Unexpected data type for balance: {type(balance_hex)}. Expected a hexadecimal string.")
         except ValueError as e:
             print(f"Error converting balance: {e}")
 
 
-async def check_block_number(session, rpc_endpoint):
+async def check_block_number(session, rpc_endpoint, success_counter):
     payload = {
         "jsonrpc": "2.0",
         "method": "eth_blockNumber",
@@ -164,6 +178,7 @@ async def check_block_number(session, rpc_endpoint):
         try:
             block_number = int(result['result'], 16)
             print(f"Block number: {block_number}, rpc endpoint: {rpc_endpoint}")
+            success_counter['count'] += 1
         except TypeError as e:
             print(f"Error converting block number: {e}")
 
@@ -172,22 +187,22 @@ async def fetch_data(session, payload, rpc_endpoint):
     try:
         async with session.post(rpc_endpoint, json=payload) as response:
             if response.status == 429:
-                # print(f"Too Many Requests. Waiting 1 second for the server to recover. {rpc_endpoint}")
+                print(f"Too Many Requests. Waiting 1 second for the server to recover. {rpc_endpoint}")
                 await asyncio.sleep(1)
                 return None
 
             if response.status != 200:
-                # print(f"Error fetching data: HTTP status {response.status}. {rpc_endpoint}")
+                print(f"Error fetching data: HTTP status {response.status}. {rpc_endpoint}")
                 return None
 
             content_type = response.headers.get('content-type', '').lower()
             if 'application/json' not in content_type:
-                # print(f"Unexpected response content type: {content_type}, {rpc_endpoint}")
+                print(f"Unexpected response content type: {content_type}, {rpc_endpoint}")
                 return None
 
             return await response.json()
     except ClientOSError:
-        # print(f"A network error occurred. Retrying after 1 second. {rpc_endpoint}")
+        print(f"A network error occurred. Retrying after 1 second. {rpc_endpoint}")
         await asyncio.sleep(1)
         return await fetch_data(session, payload, rpc_endpoint)
     except Exception as e:
@@ -196,8 +211,9 @@ async def fetch_data(session, payload, rpc_endpoint):
 
 
 def main(loaded_account_dictionary):
-    print(f"Starting the program at {datetime.now()}")
-    asyncio.run(run(loaded_account_dictionary))
+    starting = datetime.now()
+    print(f"Starting the program at {starting}")
+    asyncio.run(run(loaded_account_dictionary, starting))
 
 
 if __name__ == "__main__":
