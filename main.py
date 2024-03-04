@@ -125,8 +125,11 @@ async def check_wallet_balance(session, wallet_address, rpc_endpoint):
     }
     result = await fetch_data(session, payload, rpc_endpoint)
     if result is not None and 'result' in result:
-        balance = int(str(result['result']), 16) / 1e18
-        print(f"Wallet balance: {balance} ETH, rpc endpoint: {rpc_endpoint}")
+        try:
+            balance = int(str(result['result']), 16) / 1e18
+            print(f"Wallet balance: {balance} ETH, rpc endpoint: {rpc_endpoint}")
+        except ValueError as e:
+            print(f"Error converting balance: {e}")
 
 
 async def check_gas_price(session, rpc_endpoint):
