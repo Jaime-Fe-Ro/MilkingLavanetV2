@@ -12,12 +12,11 @@ today = datetime.today().strftime('%d-%m-%Y')
 
 def startup():
     check_log_folder_exists()
-    account_dictionary = user_select_account_file()
-    return account_dictionary
+    account_dictionary_file = user_select_account_file()
+    return account_dictionary_file
 
 
 def check_log_folder_exists():
-    logs_path = os.path.join(os.getcwd(), logs_folder)
     if not os.path.exists(logs_path):
         print(f"Logs folder '{logs_folder}' does not exist.")
         exit()
@@ -37,8 +36,8 @@ def user_select_account_file():
 
     elif len(log_list) == 1:
         selected_log = get_account_dictionary_file_path(log_list, 0)
-        account_dictionary = get_account_dictionary(selected_log)
-        return account_dictionary
+        dictionary = get_account_dictionary(selected_log)
+        return dictionary
 
     else:
         print("Multiple log files found for the specified date:")
@@ -49,8 +48,8 @@ def user_select_account_file():
         try:
             if 0 <= choice < len(log_list):
                 selected_log = get_account_dictionary_file_path(log_list, choice)
-                account_dictionary = get_account_dictionary(selected_log)
-                return account_dictionary
+                dictionary = get_account_dictionary(selected_log)
+                return dictionary
             else:
                 print("Invalid choice, run the program again and select a valid file.")
                 exit()
@@ -76,13 +75,12 @@ def get_account_dictionary_list_for_selected_date(selected_date):
     return matching_files
 
 
-
 def get_account_dictionary(log_path):
     try:
         with open(log_path, 'r') as file:
-            account_dictionary = json.load(file)
-            if isinstance(account_dictionary, dict):
-                return account_dictionary
+            dictionary = json.load(file)
+            if isinstance(dictionary, dict):
+                return dictionary
             else:
                 print(f"Error: Unexpected data format in file '{log_path}'. Expected a dictionary.")
                 return {}
@@ -95,11 +93,11 @@ def get_account_dictionary_file_path(log_list, choice):
     return os.path.join(logs_path, log_list[choice])
 
 
-async def run(account_dictionary):
+async def run(dictionary_file):
     connector = TCPConnector(limit=100, limit_per_host=40)
     async with ClientSession(connector=connector) as session:
         while True:
-            wallets_and_endpoints = get_wallets_and_endpoints(account_dictionary)
+            wallets_and_endpoints = get_wallets_and_endpoints(dictionary_file)
 
             tasks = []
             for wallet_address, rpc_endpoint in wallets_and_endpoints.items():
@@ -109,9 +107,10 @@ async def run(account_dictionary):
 
             await asyncio.gather(*tasks)
 
-def get_wallets_and_endpoints(account_dictionary):
+
+def get_wallets_and_endpoints(selected_account_dictionary):
     wallets_and_endpoints = {}
-    for wallet_address, details in account_dictionary.items():
+    for wallet_address, details in selected_account_dictionary.items():
         rpc_endpoint = details.get('rpc_endpoint')
         wallets_and_endpoints[wallet_address] = rpc_endpoint
     return wallets_and_endpoints
@@ -150,7 +149,6 @@ async def check_gas_price(session, rpc_endpoint):
             print(f"Error converting balance: {e}")
 
 
-
 async def check_block_number(session, rpc_endpoint):
     payload = {
         "jsonrpc": "2.0",
@@ -166,8 +164,8 @@ async def check_block_number(session, rpc_endpoint):
         except TypeError as e:
             print(f"Error converting block number: {e}")
 
+
 async def fetch_data(session, payload, rpc_endpoint):
-    connector = TCPConnector(limit=50, limit_per_host=25)  # rate limmiting, 50 requests per second. Otherwise crashes server
     try:
         async with session.post(rpc_endpoint, json=payload) as response:
             if response.status == 429:
@@ -190,13 +188,13 @@ async def fetch_data(session, payload, rpc_endpoint):
         await asyncio.sleep(1)
         return await fetch_data(session, payload, rpc_endpoint)
     except Exception as e:
-        # print(f"Error fetching data: {e}. {rpc_endpoint}")
+        print(f"Error fetching data: {e}. {rpc_endpoint}")
         return None
 
 
-def main(account_dictionary):
+def main(loaded_account_dictionary):
     print(f"Starting the program at {datetime.now()}")
-    asyncio.run(run(account_dictionary))
+    asyncio.run(run(loaded_account_dictionary))
 
 
 if __name__ == "__main__":

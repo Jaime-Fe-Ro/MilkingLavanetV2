@@ -37,26 +37,29 @@ async def main():
         print("Transaction pairs are empty.")
         return
 
-    requests_per_random_account = 3
-
     async with aiohttp.ClientSession() as session:
         for wallet_address, rpc_endpoint in account_dict.items():
             private_key = account_dict[wallet_address].get('private_key')
+            rpc_endpoint = account_dict[wallet_address]['rpc_endpoint']
             if private_key:
-                print(f"Selected entry: {wallet_address}: {rpc_endpoint}")
+                print(f"Selected: {wallet_address}")
 
                 # Retrieve a random transaction pair
-                transaction_pair = random.choice(transaction_pairs)
+                transaction_pair = hex(random.choice(transaction_pairs))
+                print(f"Transaction pair: {transaction_pair}")
                 eth_value = transaction_pair['transaction_value_eth']
+                print(f"ETH value: {eth_value}")
                 gas_limit = transaction_pair['gas_limit']
+                print(f"Gas limit: {gas_limit}")
                 gas_price = transaction_pair['gas_price_gwei']
+                print(f"Gas price: {gas_price}")
 
                 # Perform the transaction RPC call
                 result = await perform_transaction(session, wallet_address, private_key, rpc_endpoint, eth_value,
                                                    gas_limit, gas_price)
 
                 if result:
-                    print(f"Transaction successful: {result}")
+                    print(result)
                 else:
                     print("Transaction failed.")
             else:
@@ -70,9 +73,9 @@ async def perform_transaction(session, wallet_address, private_key, rpc_endpoint
         "params": [{
             "from": wallet_address,
             "to": "0xC0Fe952E091bbe17A617daD4883b0cE0B6ce72bA",  # Specify the recipient address
-            "value": hex(int(eth_value * 1e18)),  # Convert ETH value to Wei
-            "gas": hex(gas_limit),
-            "gasPrice": hex(gas_price * 1e9)  # Convert Gwei to Wei
+            "value": int(eth_value * 1e18),  # Convert ETH value to Wei
+            "gas": str(gas_limit),
+            "gasPrice": int(gas_price * 1e9)  # Convert Gwei to Wei
         }],
         "id": 1
     }

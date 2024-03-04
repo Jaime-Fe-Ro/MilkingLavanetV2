@@ -40,7 +40,7 @@ def save_account_dict(account_dict, file_name):
 
 
 def validate_rpc_endpoint(rpc_endpoint, account_dict, file_name):
-    if not rpc_endpoint.startswith("https://eth1.lava.build/lava-referer"):
+    if not rpc_endpoint.startswith("https://eth1.lava.build/lava-referer") or len(rpc_endpoint) != 74:
         rpc_endpoint = input("Invalid RPC endpoint, try again: ")
         stop_running_check(rpc_endpoint, account_dict, file_name)
         rpc_endpoint = validate_rpc_endpoint(rpc_endpoint, account_dict, file_name)
@@ -74,6 +74,7 @@ def check_if_rpc_endpoint_already_in_account_dictionary(rpc_endpoint, account_di
         check_if_rpc_endpoint_already_in_account_dictionary(rpc_endpoint, account_dict, file_name)
     return rpc_endpoint
 
+
 def check_if_wallet_address_already_in_account_dictionary(wallet_address, account_dict, file_name):
     if wallet_address in account_dict:
         wallet_address = input("Duplicate wallet address, try again: ")
@@ -81,6 +82,7 @@ def check_if_wallet_address_already_in_account_dictionary(wallet_address, accoun
         validate_wallet_address(wallet_address, account_dict, file_name)
         check_if_wallet_address_already_in_account_dictionary(wallet_address, account_dict, file_name)
     return wallet_address
+
 
 def check_if_private_key_already_in_account_dictionary(private_key, account_dict, file_name):
     if private_key in [v["private_key"] for v in account_dict.values()]:

@@ -39,5 +39,4 @@ if __name__ == "__main__":
     # Save pairs to a JSON file
     with open('eth_transaction_pairs.json', 'w') as f:
         json.dump(pairs, f, indent=4)
-
-    print(f"{num_pairs} pairs of Ethereum transaction values, gas limits, and gas prices saved to eth_transaction_pairs.json")
+        print(f"Saved {num_pairs} transaction pairs to eth_transaction_pairs.json")
