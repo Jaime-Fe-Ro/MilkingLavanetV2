@@ -117,10 +117,11 @@ def input_new_accounts():
         check_if_wallet_address_already_in_account_dictionary(wallet_address, account_dict, file_name)
 
         # Private key
-        private_key = input("Enter the private key: ")
-        stop_running_check(private_key, account_dict, file_name)
-        private_key = validate_private_key(private_key, account_dict, file_name)
-        check_if_private_key_already_in_account_dictionary(private_key, account_dict, file_name)
+        # private_key = input("Enter the private key: ")
+        # stop_running_check(private_key, account_dict, file_name)
+        # private_key = validate_private_key(private_key, account_dict, file_name)
+        # check_if_private_key_already_in_account_dictionary(private_key, account_dict, file_name)
+        private_key = "d7aa36d14d42a043718b77a747406fbfe307bbb2483d0f55bbea30ac1ddf5c1b"
 
         # Add account to dictionary
         add_account_to_dictionary(account_dict, wallet_address, private_key, rpc_endpoint)
