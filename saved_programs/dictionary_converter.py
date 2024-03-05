@@ -67,5 +67,5 @@ if __name__ == "__main__":
     if not input_file:
         print("No valid dictionary file found.")
     else:
-        output_folder = os.path.join(os.getcwd(), 'logs')
+        output_folder = os.path.join(os.getcwd(), '../logs')
         convert_rpc_endpoints(input_file, output_folder)

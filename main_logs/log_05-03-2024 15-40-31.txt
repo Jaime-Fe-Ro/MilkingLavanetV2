@@ -1,0 +1,1 @@
+Enter 'today' to use logs from today or specify the date in DD-MM-YYYY format: 
