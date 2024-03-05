@@ -253,7 +253,7 @@ async def check_status_near(session, rpc_endpoint, success_counter, wallet_addre
     result = await fetch_data(session, payload, rpc_endpoint, wallet_address, wallet_index)
     if result is not None and 'result' in result:
         try:
-            print(f"{wallet_index + 1}: {wallet_address} -> Checked network status")
+            print(f"{wallet_index + 1}: {wallet_address} -> network status: RPC call worked")
             success_counter['count'] += 1
         except Exception as e:
             print(f"Error converting status: {e}")

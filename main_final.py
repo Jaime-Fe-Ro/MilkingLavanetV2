@@ -7,6 +7,7 @@ from datetime import datetime
 
 logs_folder = 'logs'
 
+
 def get_protocol_choice():
     while True:
         protocol_choice = input("Choose the protocol: 1. Ethereum  2. Near Protocol: ")
@@ -14,6 +15,7 @@ def get_protocol_choice():
             return protocol_choice
         else:
             print("Invalid choice. Please choose 1 for Ethereum or 2 for Near Protocol.")
+
 
 def list_log_files():
     logs_path = os.path.join(os.getcwd(), logs_folder)
@@ -26,6 +28,7 @@ def list_log_files():
     for i, file in enumerate(log_files, start=1):
         print(f"{i}. {file}")
     return log_files
+
 
 def get_dictionary_file(date_str, log_files):
     if not log_files:
@@ -136,9 +139,6 @@ async def main():
                     print(f"Completed {cycle_count} cycles through the entire list of wallets.")
                 selected_entry = list(account_dict.items())[wallet_index - 1]
                 print(f"New selected entry: Wallet {wallet_index} ({selected_entry[0]})")
-                request_count = 0
-            else:
-                print(" -- Batch Successful -- ")
 
 
 async def check_wallet_balance_eth(session, wallet_address, rpc_endpoint):
@@ -175,6 +175,7 @@ async def check_block_number_eth(session, rpc_endpoint):
 
 
 async def check_wallet_balance_near(session, wallet_address, rpc_endpoint):
+    print(rpc_endpoint)
     payload = {
         "jsonrpc": "2.0",
         "method": "query",
@@ -182,6 +183,11 @@ async def check_wallet_balance_near(session, wallet_address, rpc_endpoint):
         "id": 1
     }
     result = await fetch_data(session, payload, rpc_endpoint)
+    try:
+        block_number = int(result['result'], 16)
+        print(f"{wallet_address} -> block number: {block_number}")
+    except Exception as e:
+        print(f"Error converting block number: {e}")
     return result
 
 

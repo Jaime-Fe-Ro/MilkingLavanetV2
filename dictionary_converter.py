@@ -1,5 +1,7 @@
 import json
 import os
+from datetime import datetime
+
 
 def get_dictionary_file():
     logs_folder = 'logs'
