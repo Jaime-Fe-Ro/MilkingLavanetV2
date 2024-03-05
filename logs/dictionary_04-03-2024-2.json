@@ -1,0 +1,14 @@
+{
+    "0xB6b593aaAa33DDFe6D5c727341eBF4508015805a": {
+        "private_key": "5cc8e54108a05c1de378a241536db2ba691ac60f32c30a123890e2729dec287b",
+        "rpc_endpoint": "https://eth1.lava.build/lava-referer-3111197e-571e-45de-a67d-a51b7c0c64bf/"
+    },
+    "0x2548865e755158Ec7eA53f6596A3baC71E629098": {
+        "private_key": "0f963e97fe4fb6a81f1e4efa3ee02891b3354c7ce38cffbe6e9fcf6625a775f9",
+        "rpc_endpoint": "https://eth1.lava.build/lava-referer-97ea9687-e626-484c-b016-752f9eb18cef/"
+    },
+    "0x9a4513889F286Aa86A69fe7f1c50D9e943F2d44f": {
+        "private_key": "fbe60b0fe0267865bdf89300051e6549dfa3c5ae28ef45222d53e0c803223076",
+        "rpc_endpoint": "https://eth1.lava.build/lava-referer-baddcd1f-b6c2-4472-84c6-cebbccb961e2/"
+    }
+}
