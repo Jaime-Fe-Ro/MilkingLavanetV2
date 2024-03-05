@@ -128,14 +128,14 @@ async def run(dictionary_file, started_at, eth):
     loop_counter = 0
     success_counter = {'count': 0}
     async with ClientSession(connector=connector) as session:
-        while True:
+        while loop_counter <= 599:
             if eth:
                 tasks = []
                 print(f"\nStarting loop {loop_counter + 1}")
                 for wallet_index, (wallet_address, rpc_endpoint) in enumerate(wallets_and_endpoints.items()):
                     tasks.append(check_wallet_balance(session, wallet_address, rpc_endpoint, success_counter, wallet_index))
-                    tasks.append(check_gas_price(session, rpc_endpoint, success_counter, wallet_address, wallet_index))
-                    tasks.append(check_block_number(session, rpc_endpoint, success_counter, wallet_address, wallet_index))
+                    # tasks.append(check_gas_price(session, rpc_endpoint, success_counter, wallet_address, wallet_index))
+                    # tasks.append(check_block_number(session, rpc_endpoint, success_counter, wallet_address, wallet_index))
                 await asyncio.gather(*tasks)
                 loop_counter += 1
                 print(f"Finished loop {loop_counter}\n")
@@ -148,20 +148,20 @@ async def run(dictionary_file, started_at, eth):
                 print(f"{avg_requests_per_sec} average requests per second")
                 avg_requests_per_wallet = round(success_counter['count'] / len(wallets_and_endpoints))
                 print(f"{avg_requests_per_wallet} requests per wallet")
-            else:
-                tasks = []
-                print(f"\nStarting loop {loop_counter + 1}")
-                for wallet_index, (wallet_address, rpc_endpoint) in enumerate(wallets_and_endpoints.items()):
-                    tasks.append(check_status_near(session, rpc_endpoint, success_counter, wallet_address, wallet_index))
-                    tasks.append(check_wallet_balance_near(session, "ironar.near", rpc_endpoint, success_counter, wallet_address, wallet_index))
-                await asyncio.gather(*tasks)
-                loop_counter += 1
-                print(f"Finished loop {loop_counter}\n")
-                print("Totals:")
-                print(f"{success_counter['count']} successful requests")
-                print(f"{round((datetime.now() - started_at).total_seconds(), 1)} seconds of running")
-                print(f"{round(success_counter['count'] / (datetime.now() - started_at).total_seconds(), 1)} average requests per second")
-                print(f"{round(success_counter['count'] / len(wallets_and_endpoints))} requests per wallet")
+            # else:
+            #     tasks = []
+            #     print(f"\nStarting loop {loop_counter + 1}")
+            #     for wallet_index, (wallet_address, rpc_endpoint) in enumerate(wallets_and_endpoints.items()):
+            #         tasks.append(check_status_near(session, rpc_endpoint, success_counter, wallet_address, wallet_index))
+            #         tasks.append(check_wallet_balance_near(session, "ironar.near", rpc_endpoint, success_counter, wallet_address, wallet_index))
+            #     await asyncio.gather(*tasks)
+            #     loop_counter += 1
+            #     print(f"Finished loop {loop_counter}\n")
+            #     print("Totals:")
+            #     print(f"{success_counter['count']} successful requests")
+            #     print(f"{round((datetime.now() - started_at).total_seconds(), 1)} seconds of running")
+            #     print(f"{round(success_counter['count'] / (datetime.now() - started_at).total_seconds(), 1)} average requests per second")
+            #     print(f"{round(success_counter['count'] / len(wallets_and_endpoints))} requests per wallet")
 
 
 def get_wallets_and_endpoints(selected_account_dictionary):
@@ -253,7 +253,7 @@ async def check_status_near(session, rpc_endpoint, success_counter, wallet_addre
     result = await fetch_data(session, payload, rpc_endpoint, wallet_address, wallet_index)
     if result is not None and 'result' in result:
         try:
-            print(f"{wallet_index + 1}: {wallet_address} -> network status: RPC call worked")
+            print(f"{wallet_index + 1}: {wallet_address} -> Checked network status")
             success_counter['count'] += 1
         except Exception as e:
             print(f"Error converting status: {e}")
@@ -263,26 +263,26 @@ async def fetch_data(session, payload, rpc_endpoint, wallet_address, wallet_inde
     try:
         async with session.post(rpc_endpoint, json=payload) as response:
             if response.status == 429:
-                print(f"ERROR. Too Many Requests. Waiting 1 second for the server to recover. {wallet_index}: {wallet_address}")
+                print(f"ERROR. Too Many Requests. Waiting 1 second for the server to recover. {wallet_index + 1}: {wallet_address}")
                 await asyncio.sleep(1)
                 return await fetch_data(session, payload, rpc_endpoint, wallet_address, wallet_index)
 
             if response.status != 200:
-                print(f"ERROR. Error fetching data: HTTP status {response.status}. {wallet_index}: {wallet_address}")
+                print(f"ERROR. Error fetching data: HTTP status {response.status}. {wallet_index + 1}: {wallet_address}")
                 return await fetch_data(session, payload, rpc_endpoint, wallet_address, wallet_index)
 
             content_type = response.headers.get('content-type', '').lower()
             if 'application/json' not in content_type:
-                print(f"ERROR. Unexpected response content type: {content_type}, {wallet_index}: {wallet_address}")
+                print(f"ERROR. Unexpected response content type: {content_type}, {wallet_index + 1}: {wallet_address}")
                 return await fetch_data(session, payload, rpc_endpoint, wallet_address, wallet_index)
 
             return await response.json()
     except ClientOSError:
-        print(f"ERROR. A network error occurred. Retrying after 1 second. {wallet_index}: {wallet_address}")
+        print(f"ERROR. A network error occurred. Retrying after 1 second. {wallet_index + 1}: {wallet_address}")
         await asyncio.sleep(1)
         return await fetch_data(session, payload, rpc_endpoint, wallet_address, wallet_index)
     except Exception as e:
-        print(f"ERROR. Error fetching data: {e}. {wallet_index}: {wallet_address}")
+        print(f"ERROR. Error fetching data: {e}. {wallet_index + 1}: {wallet_address}")
         return await fetch_data(session, payload, rpc_endpoint, wallet_address, wallet_index)
 
 

@@ -1,5 +1,0 @@
-Enter 'today' to use logs from today or specify the date in DD-MM-YYYY format: Selected log file: C:\Users\jaime\MilkingLavanetV2\logs\dictionary_04-03-2024-1.json
- - Input protocol number - 
-1. Ethereum  
-2. Near Protocol
--> 
